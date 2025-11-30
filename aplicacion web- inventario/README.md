@@ -1,4 +1,7 @@
-﻿# Aplicacion web de Inventario
+﻿[![CI](https://github.com/ayakamaster999/todo-ci/actions/workflows/ci.yml/badge.svg)](https://github.com/ayakamaster999/todo-ci/actions)
+[![codecov](https://codecov.io/gh/ayakamaster999/todo-ci/branch/main/graph/badge.svg)](https://codecov.io/gh/ayakamaster999/todo-ci)
+
+# Aplicacion web de Inventario
  
 |                      Titulo                     |                                                             Contenido                                                                                  |
 |-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -60,8 +63,74 @@ El proyecto está dividido en dos servicios principales gestionados por Docker C
 * **`frontend/` (Servicio UI):**
     * **Tecnología:** HTML, CSS, JavaScript (servido por Nginx).
     * **Propósito:** Interfaz de usuario, consume los endpoints del servicio `backend`.
+5. Explicacion de la utilización de GitHub Actions
+## 🚀 Integración Continua con GitHub Actions
+El proyecto incluye un workflow automatizado de CI/CD que se ejecuta en GitHub Actions. Este workflow realiza las siguientes tareas:
+- Instala dependencias de `backend` y `frontend` (si existen).
+- Ejecuta pruebas y build (si están configurados en `package.json`).
+- Levanta la aplicación usando `docker compose up -d --build`.
+
+### Activación Automática del Workflow
+El workflow se dispara automáticamente en:
+- **Push a `main`:** Cuando haces `git push` a la rama principal.
+- **Pull Request a `main`:** Cuando abres un PR hacia `main`.
+- **Disparo manual:** Accediendo a la pestaña **Actions** en GitHub y clickeando **Run workflow** en el job **Docker Compose CI**.
+
+### Ver el Estado del Workflow en GitHub
+1. Dirígete a tu repositorio en GitHub.
+2. Haz clic en la pestaña **Actions** (arriba del repositorio).
+3. Selecciona **Docker Compose CI** de la lista de workflows.
+4. Verás un historial de ejecuciones con badges de ✅ (exitoso) o ❌ (fallido).
+5. Haz clic en una ejecución para ver detalles, logs y resultados.
+
+### Probar el Workflow Localmente (PowerShell en Windows)
+Para simular exactamente lo que GitHub Actions ejecuta, puedes correr los comandos localmente en PowerShell:
+
+```powershell
+# 1. Asegúrate de estar en la raíz del repositorio
+cd "C:\Users\jrp-2\Desktop\ARCHIVOS DE TRABAJO DE MIGUEL\7 semestre\Segundo bloque\INTEGRACIÓN CONTINUA\Entrega Final\Aplicacion-Web-InventarioDoker-main"
+
+# 2. Instala Node 18 (si no lo tienes)
+# Descárgalo de https://nodejs.org/ o usa un gestor como nvm-windows
+
+# 3. Navega al backend, instala dependencias y ejecuta tests/build
+cd "aplicacion web- inventario\backend"
+npm ci
+npm test
+npm run build
+cd ..\..
+
+# 4. Navega al frontend (si existe package.json), instala dependencias y ejecuta tests/build
+cd "aplicacion web- inventario\frontend"
+if (Test-Path "package.json") {
+    npm ci
+    npm test
+    npm run build
+}
+cd ..\..
+
+# 5. Levanta los contenedores con docker compose
+$COMPOSE_FILE = "aplicacion web- inventario\docker-compose.yml"
+docker compose -f $COMPOSE_FILE down
+docker compose -f $COMPOSE_FILE pull
+docker compose -f $COMPOSE_FILE up -d --build
+
+# 6. Verifica que los contenedores estén corriendo
+docker compose -f $COMPOSE_FILE ps
+
+# 7. Para ver los logs
+docker compose -f $COMPOSE_FILE logs -f
+
+# 8. Cuando termines, detén los contenedores
+docker compose -f $COMPOSE_FILE down
+```
+
+### Notas Importantes
+- Los comandos `npm test` y `npm run build` son opcionales; si no existen en `package.json`, se saltan sin error.
+- Si algún test o build falla en CI, el workflow sigue adelante (no-bloqueante), permitiendo inspeccionar los logs en GitHub Actions.
+- Para hacer tests/build obligatorios (romper el workflow si fallan), contáctate con el equipo de DevOps.
  
-5. Contribuciones y Contacto
+6. Contribuciones y Contacto
 ## 🤝 Contribuciones
 Las contribuciones son bienvenidas. Por favor, abre un 'issue' o envía un 'pull request' para sugerir mejoras o reportar errores.
 ## ✉️ Contacto
