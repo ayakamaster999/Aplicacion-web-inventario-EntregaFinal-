@@ -61,7 +61,7 @@ El proyecto está dividido en dos servicios principales gestionados por Docker C
     * **Tecnología:** HTML, CSS, JavaScript (servido por Nginx).
     * **Propósito:** Interfaz de usuario, consume los endpoints del servicio `backend`.
  
-5. Contribuciones y Contactos
+5. Contribuciones y Contacto
 ## 🤝 Contribuciones
 Las contribuciones son bienvenidas. Por favor, abre un 'issue' o envía un 'pull request' para sugerir mejoras o reportar errores.
 ## ✉️ Contacto
