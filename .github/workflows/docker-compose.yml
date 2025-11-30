@@ -1,0 +1,36 @@
+name: Docker Compose CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set COMPOSE_FILE path
+        run: echo "COMPOSE_FILE=aplicacion web- inventario/docker-compose.yml" >> $GITHUB_ENV
+
+      - name: Show context
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Ref: $GITHUB_REF"
+          echo "Using compose file: $COMPOSE_FILE"
+
+      - name: Docker compose down (clean previous)
+        run: |
+          set -e
+          docker compose -f "$COMPOSE_FILE" down || true
+
+      - name: Docker compose pull
+        run: docker compose -f "$COMPOSE_FILE" pull
+
+      - name: Docker compose up (build & run)
+        run: docker compose -f "$COMPOSE_FILE" up -d --build
