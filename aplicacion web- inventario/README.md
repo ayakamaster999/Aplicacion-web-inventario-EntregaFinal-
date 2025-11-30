@@ -1,5 +1,5 @@
-﻿[![CI](https://github.com/ayakamaster999/todo-ci/actions/workflows/ci.yml/badge.svg)](https://github.com/ayakamaster999/todo-ci/actions)
-[![codecov](https://codecov.io/gh/ayakamaster999/todo-ci/branch/main/graph/badge.svg)](https://codecov.io/gh/ayakamaster999/todo-ci)
+﻿[![CI](https://github.com/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-/actions/workflows/ci.yml/badge.svg)](https://github.com/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-/actions)
+[![codecov](https://codecov.io/gh/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-/branch/main/graph/badge.svg)](https://codecov.io/gh/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-)
 
 # Aplicacion web de Inventario
  
