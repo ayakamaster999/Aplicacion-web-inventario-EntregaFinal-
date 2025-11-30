@@ -1,8 +1,5 @@
-﻿[![CI](https://github.com/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-/actions/workflows/ci.yml/badge.svg)](https://github.com/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-/actions)
-[![codecov](https://codecov.io/gh/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-/branch/main/graph/badge.svg)](https://codecov.io/gh/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-)
+﻿# Aplicacion web de Inventario
 
-# Aplicacion web de Inventario
- 
 |                      Titulo                     |                                                             Contenido                                                                                  |
 |-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Aplicación Web de Inventario Contenerizada**  | Descripción concisa del propósito del proyecto (Ej: Un sistema modular para la gestión de inventario, implementado con arquitectura de microservicios).|
