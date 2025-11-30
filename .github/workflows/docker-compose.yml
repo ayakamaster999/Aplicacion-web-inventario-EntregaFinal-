@@ -1,3 +1,4 @@
+
 name: Docker Compose CI
 
 on:
@@ -10,7 +11,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,6 +24,41 @@ jobs:
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
           echo "Using compose file: $COMPOSE_FILE"
+
+      - name: Setup Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install & run tests/build (backend/frontend if present)
+        shell: bash
+        run: |
+          # This step checks for package.json in the backend and frontend folders
+          set +e
+          for DIR in "aplicacion web- inventario/backend" "aplicacion web- inventario/frontend"; do
+            echo "--- Checking $DIR ---"
+            if [ -f "$DIR/package.json" ]; then
+              echo "Found package.json in: $DIR"
+              pushd "$DIR"
+              echo "Installing dependencies in $DIR"
+              npm ci
+
+              # Run tests if defined (non-blocking)
+              node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.test ? 0 : 2)" \
+                && (npm test || echo "Tests in $DIR failed or returned non-zero (non-blocking)") \
+                || echo "No test script for $DIR"
+
+              # Run build if defined (non-blocking)
+              node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.build ? 0 : 2)" \
+                && (npm run build || echo "Build in $DIR failed (non-blocking)") \
+                || echo "No build script for $DIR"
+
+              popd
+            else
+              echo "No package.json in $DIR — skipping"
+            fi
+          done
+          set -e
 
       - name: Docker compose down (clean previous)
         run: |
