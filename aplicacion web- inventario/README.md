@@ -126,6 +126,60 @@ docker compose -f $COMPOSE_FILE down
 - Los comandos `npm test` y `npm run build` son opcionales; si no existen en `package.json`, se saltan sin error.
 - Si algún test o build falla en CI, el workflow sigue adelante (no-bloqueante), permitiendo inspeccionar los logs en GitHub Actions.
 - Para hacer tests/build obligatorios (romper el workflow si fallan), contáctate con el equipo de DevOps.
+
+## 📊 Análisis de Cobertura de Código con Codecov
+
+El proyecto incluye integración automática con **Codecov** para monitorear la cobertura de código en cada push y pull request.
+
+### ¿Qué es Codecov?
+Codecov es una herramienta que analiza la cobertura de código (qué porcentaje de tu código está cubierto por tests) y proporciona:
+- Reportes visuales de cobertura por archivo y línea
+- Comparación de cobertura entre commits
+- Comentarios automáticos en PRs mostrando cambios de cobertura
+- Umbrales configurables para garantizar calidad mínima
+
+### Cómo Funciona
+1. **Ejecución de Tests con Coverage**: Durante CI, el workflow ejecuta `npm run test:coverage` en el backend.
+2. **Generación de Reporte**: Jest genera un reporte en formato `lcov.info` en la carpeta `coverage/`.
+3. **Subida Automática**: La acción `codecov/codecov-action@v4` sube el reporte a Codecov.
+4. **Análisis**: Codecov analiza el reporte y actualiza el estado en GitHub.
+
+### Ver Reportes de Cobertura
+1. **En GitHub (comentarios automáticos en PRs)**:
+   - Cada PR recibirá un comentario automático de Codecov mostrando:
+     - % total de cobertura
+     - Cambio de cobertura vs. rama base
+     - Archivos nuevos o modificados
+
+2. **En Codecov Dashboard**:
+   - Ve a https://codecov.io/gh/ayakamaster999/Aplicacion-web-inventario-EntregaFinal-
+   - Necesitas conectar tu cuenta GitHub a Codecov (es gratuito para repos públicos)
+   - Visualiza histórico de cobertura, reportes detallados y estadísticas
+
+### Configuración de Umbrales
+El archivo `codecov.yml` (en la raíz del repo) define:
+- **Target Coverage (proyecto)**: 70% mínimo
+- **Target Coverage (patch)**: 80% para nuevos cambios
+- **Flags**: Seguimiento separado por `backend` y `frontend`
+
+### Ejecutar Tests Localmente
+Para simular la generación de reportes localmente:
+
+```powershell
+cd "aplicacion web- inventario\backend"
+npm install
+npm run test:coverage
+```
+
+Esto generará:
+- `coverage/lcov.info` - Reporte en formato lcov (subido a Codecov)
+- `coverage/lcov-report/index.html` - Reporte HTML visual (puedes abrirlo en el navegador)
+
+### Notas Importantes
+- **Token Codecov**: Para repos públicos no es necesario; para privados, añade `CODECOV_TOKEN` en Settings → Secrets
+- **Exclusiones**: El archivo `codecov.yml` excluye `node_modules`, archivos de config y archivos de test
+- **Status Checks**: Si la cobertura cae por debajo del umbral, Codecov marcará el check como ⚠️ (advertencia no-bloqueante)
+
  
 6. Contribuciones y Contactos
 ## 🤝 Contribuciones

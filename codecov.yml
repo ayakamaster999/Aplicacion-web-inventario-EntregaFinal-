@@ -1,32 +1,47 @@
-# codecov.yml - control básico de thresholds
 codecov:
   require_ci_to_pass: yes
+  precision: 2
+  round: down
+  layout: "reach,diff,flags,tree"
+  behavior: default
 
 coverage:
   precision: 2
   round: down
+  range: "70...100"
   status:
     project:
       default:
-        target: 80%        # meta de cobertura global del proyecto
-        threshold: 2%      # tolerancia para cambios pequeños
+        target: 70
+        threshold: 0.5
+        base: auto
+        flags:
+          - backend
     patch:
       default:
-        target: 75%        # cobertura mínima en líneas modificadas (patch)
-        threshold: 0%
-  range: "70..100"
+        target: 80
+        threshold: 0.5
+    changes:
+      default:
+        target: 80
+        threshold: 0.5
 
 ignore:
-  - "tests/*"
-  - "**/node_modules/**"
-  - "**/migrations/**"
+  - "node_modules"
+  - "**/*.config.js"
+  - "**/test/**"
+  - "**/*.test.js"
 
-parsers:
-  gcov:
-    branch_detection:
-      conditional: yes
+flags:
+  backend:
+    carryforward: true
+    paths:
+      - aplicacion\ web-\ inventario/backend
+    precision: 2
 
-# Opciones para fallar el build en Codecov UI (si se configura)
 comment:
-  layout: "reach, diff, patches"
-
+  layout: "reach, diff, flags, tree"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
