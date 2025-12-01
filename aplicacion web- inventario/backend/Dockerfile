@@ -5,8 +5,11 @@ WORKDIR /app
 # in a committed package-lock.json used by the repo. CI/dev deps (jest/supertest)
 # must not be installed into the production image.
 COPY package.json ./
+# Remove devDependencies from package.json inside the build image before installing
+# This avoids npm attempting to resolve devDependencies (e.g. jest/supertest) during image build
+RUN node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));delete p.devDependencies;fs.writeFileSync('package.json',JSON.stringify(p));"
 # Install only production deps
-RUN npm install --omit=dev --no-audit --no-fund
+RUN npm install --no-audit --no-fund
 COPY server.js ./
 # Mantener data.json fuera del contenedor con volumen en docker-compose
 EXPOSE 3000
