@@ -28,10 +28,9 @@ jobs:
           echo "Compose file: $COMPOSE_FILE"
 
       - name: Setup Node.js 18
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: ''
 
       - name: Install & run tests/build (backend/frontend if present)
         shell: bash
