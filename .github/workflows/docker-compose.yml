@@ -41,13 +41,16 @@ jobs:
               echo "Found package.json in: $DIR"
               pushd "$DIR"
               echo "Installing dependencies in $DIR"
-              # use npm install to be resilient when package-lock.json is absent
               npm install
 
-              # Run tests if defined (non-blocking)
-              node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.test ? 0 : 2)" \
-                && (npm test || echo "Tests in $DIR failed or returned non-zero (non-blocking)") \
-                || echo "No test script for $DIR"
+              # Prefer test:coverage if available, otherwise run test (both non-blocking)
+              node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts['test:coverage'] ? 0 : 2)" \
+                && (npm run test:coverage || echo "Coverage tests in $DIR failed (non-blocking)") \
+                || (
+                  node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.test ? 0 : 2)" \
+                    && (npm test || echo "Tests in $DIR failed (non-blocking)") \
+                    || echo "No test script for $DIR"
+                )
 
               # Run build if defined (non-blocking)
               node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.build ? 0 : 2)" \
@@ -60,6 +63,18 @@ jobs:
             fi
           done
           set -e
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: |
+            "aplicacion web- inventario/backend/coverage/lcov.info"
+            "aplicacion web- inventario/frontend/coverage/lcov.info"
+          flags: backend,frontend
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Docker compose down (clean previous)
         run: |
