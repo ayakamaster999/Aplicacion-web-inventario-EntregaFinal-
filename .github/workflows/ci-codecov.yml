@@ -1,0 +1,134 @@
+name: CI + Coverage (Node multi-package / Docker aware)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Find package.json files
+        id: find_pkgs
+        shell: bash
+        run: |
+          # Extra: ignore node_modules and .git
+          mapfile -t pkgs < <(git ls-files -- '*/package.json' || true)
+          # also include root package.json if exists
+          if [ -f package.json ]; then pkgs+=("package.json"); fi
+          printf "%s\n" "${pkgs[@]}" > pkgs_list.txt
+          echo "found=$(wc -l < pkgs_list.txt)" >> $GITHUB_OUTPUT
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          cat pkgs_list.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Show found package.json files
+        if: steps.find_pkgs.outputs.found != '0'
+        run: |
+          echo "Package.json list:"
+          cat pkgs_list.txt || true
+
+      - name: Install global coverage tools (nyc & lcov if needed)
+        run: |
+          npm install -g nyc coveralls
+          # lcov tool (genhtml) for optional local inspection
+          sudo apt-get update && sudo apt-get install -y lcov || true
+
+      - name: Run tests in each package and produce coverage
+        env:
+          CI: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f pkgs_list.txt ] || [ $(wc -l < pkgs_list.txt) -eq 0 ]; then
+            echo "No package.json found. Exiting with success (no Node tests detected)."
+            exit 0
+          fi
+
+          # create a directory to collect coverage reports
+          mkdir -p coverage-reports
+
+          while read -r pkgfile; do
+            [ -z "$pkgfile" ] && continue
+            dir=$(dirname "$pkgfile")
+            echo "=== Running tests in: $dir ==="
+            pushd "$dir" > /dev/null || continue
+
+            # Prefer npm ci if lockfile present
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+
+            # If project already has coverage script, run it; otherwise run nyc wrapper
+            if npm run | grep -q "coverage\\|test:cov\\|test"; then
+              # Try specific scripts in order of preference:
+              if npm run | grep -q "test:cov"; then
+                npm run test:cov || npm test
+              elif npm run | grep -q "coverage"; then
+                npm run coverage || npm test
+              else
+                # Run tests with nyc to force coverage generation
+                # Generate both lcov and cobertura (xml) for codecov
+                npm install --no-save --no-audit nyc
+                # run tests with nyc; supports mocha/jest etc. If project uses jest, nyc may need config.
+                npx nyc --reporter=lcov --reporter=cobertura npm test || true
+              fi
+            else
+              # fallback: run npm test wrapped by nyc
+              npm install --no-save nyc || true
+              npx nyc --reporter=lcov --reporter=cobertura npm test || true
+            fi
+
+            # Move possible reports to central folder
+            # common outputs: coverage/lcov.info, coverage/coverage.xml, coverage/cobertura-*.xml
+            if [ -f coverage/lcov.info ]; then
+              outname="${dir//\//_}-lcov.info"
+              cp coverage/lcov.info "../coverage-reports/${outname}" || true
+            fi
+            # cobertura/xml
+            if [ -f coverage/coverage.xml ]; then
+              outname="${dir//\//_}-coverage.xml"
+              cp coverage/coverage.xml "../coverage-reports/${outname}" || true
+            fi
+
+            popd > /dev/null
+          done < pkgs_list.txt
+
+          # list collected coverage files
+          echo "--- Collected coverage files ---"
+          ls -la coverage-reports || true
+
+      - name: Upload coverage artifacts (optional, for debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage-reports
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: |
+            coverage-reports/**/*.info
+            coverage-reports/**/*.xml
+            **/coverage/lcov.info
+            **/coverage/coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
+          # token: ${{ secrets.CODECOV_TOKEN }} # Uncomment if repo is private
