@@ -28,9 +28,13 @@ jobs:
           echo "Compose file: $COMPOSE_FILE"
 
       - name: Setup Node.js 18
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            "aplicacion web- inventario/backend/package-lock.json"
+            "aplicacion web- inventario/frontend/package-lock.json"
 
       - name: Install & run tests/build (backend/frontend if present)
         shell: bash
