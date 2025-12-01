@@ -1,9 +1,11 @@
 # backend/Dockerfile
 FROM node:18-alpine
 WORKDIR /app
-COPY package.json package-lock.json* ./
-# Install only production dependencies (omit devDependencies added for CI/testing)
-# Use the modern flag `--omit=dev` which is preferred over the deprecated `--production` config
+# Copy only package.json here to avoid pulling devDependencies that may be present
+# in a committed package-lock.json used by the repo. CI/dev deps (jest/supertest)
+# must not be installed into the production image.
+COPY package.json ./
+# Install only production deps
 RUN npm install --omit=dev --no-audit --no-fund
 COPY server.js ./
 # Mantener data.json fuera del contenedor con volumen en docker-compose
