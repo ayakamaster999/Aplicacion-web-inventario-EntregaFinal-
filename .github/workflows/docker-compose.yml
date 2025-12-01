@@ -1,4 +1,5 @@
-name: Docker Compose CI with Code Coverage
+
+name: Docker Compose CI
 
 on:
   push:
@@ -8,94 +9,80 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-and-build:
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    
     steps:
-      # ==================== Checkout ====================
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # ==================== Environment Setup ====================
       - name: Set COMPOSE_FILE path
         run: echo "COMPOSE_FILE=aplicacion web- inventario/docker-compose.yml" >> $GITHUB_ENV
 
-      - name: Display workflow context
+      - name: Show context
         run: |
           echo "Repository: $GITHUB_REPOSITORY"
-          echo "Branch: $GITHUB_REF"
-          echo "Actor: $GITHUB_ACTOR"
-          echo "Compose file: $COMPOSE_FILE"
+          echo "Ref: $GITHUB_REF"
+          echo "Using compose file: $COMPOSE_FILE"
 
-      # ==================== Node.js Setup ====================
-      - name: Setup Node.js 18.x
+      - name: Setup Node 18
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '18'
 
-      # ==================== Backend: Install Dependencies ====================
-      - name: Install backend dependencies
-        working-directory: aplicacion web- inventario/backend
+      - name: Install & run tests/build (backend/frontend if present)
+        shell: bash
         run: |
-          echo "Installing backend dependencies..."
-          npm install
-          echo "Dependencies installed successfully"
+          # This step checks for package.json in the backend and frontend folders
+          set +e
+          for DIR in "aplicacion web- inventario/backend" "aplicacion web- inventario/frontend"; do
+            echo "--- Checking $DIR ---"
+            if [ -f "$DIR/package.json" ]; then
+              echo "Found package.json in: $DIR"
+              pushd "$DIR"
+              echo "Installing dependencies in $DIR"
+              npm install
 
-      # ==================== Backend: Run Tests with Coverage ====================
-      - name: Run backend tests with coverage
-        working-directory: aplicacion web- inventario/backend
-        run: |
-          echo "Running tests with coverage..."
-          npm run test:coverage
-        continue-on-error: true
+              # Prefer test:coverage if available, otherwise run test (both non-blocking)
+              node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts['test:coverage'] ? 0 : 2)" \
+                && (npm run test:coverage || echo "Coverage tests in $DIR failed (non-blocking)") \
+                || (
+                  node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.test ? 0 : 2)" \
+                    && (npm test || echo "Tests in $DIR failed (non-blocking)") \
+                    || echo "No test script for $DIR"
+                )
 
-      # ==================== Backend: Run Build (if available) ====================
-      - name: Run backend build (if available)
-        working-directory: aplicacion web- inventario/backend
-        run: |
-          if npm run | grep -q "build"; then
-            echo "Running build script..."
-            npm run build
-          else
-            echo "No build script found, skipping"
-          fi
-        continue-on-error: true
+              # Run build if defined (non-blocking)
+              node -e "process.exit(require('./package.json').scripts && require('./package.json').scripts.build ? 0 : 2)" \
+                && (npm run build || echo "Build in $DIR failed (non-blocking)") \
+                || echo "No build script for $DIR"
 
-      # ==================== Code Coverage Upload to Codecov ====================
+              popd
+            else
+              echo "No package.json in $DIR — skipping"
+            fi
+          done
+          set -e
+
       - name: Upload coverage to Codecov
+        if: always()
         uses: codecov/codecov-action@v4
         with:
-          file: ./aplicacion\ web-\ inventario/backend/coverage/lcov.info
-          flags: backend
-          name: backend-coverage
+          files: |
+            "aplicacion web- inventario/backend/coverage/lcov.info"
+            "aplicacion web- inventario/frontend/coverage/lcov.info"
+          flags: backend,frontend
           fail_ci_if_error: false
-          verbose: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      # ==================== Docker Compose: Clean & Build ====================
-      - name: Docker compose down (clean previous deployment)
+      - name: Docker compose down (clean previous)
         run: |
+          set -e
           docker compose -f "$COMPOSE_FILE" down || true
-        continue-on-error: true
 
-      - name: Docker compose pull latest images
-        run: |
-          docker compose -f "$COMPOSE_FILE" pull
+      - name: Docker compose pull
+        run: docker compose -f "$COMPOSE_FILE" pull
 
-      - name: Docker compose up (build and run services)
-        run: |
-          docker compose -f "$COMPOSE_FILE" up -d --build
-        continue-on-error: true
-
-      # ==================== Verify Services ====================
-      - name: Verify services are running
-        run: |
-          echo "Checking running containers..."
-          docker ps
-          echo "Container logs for debugging (if any issues)..."
-          docker compose -f "$COMPOSE_FILE" logs || true
-        continue-on-error: true
+      - name: Docker compose up (build & run)
+        run: docker compose -f "$COMPOSE_FILE" up -d --build
