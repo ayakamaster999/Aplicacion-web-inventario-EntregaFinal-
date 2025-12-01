@@ -1,7 +1,4 @@
-﻿[![CI](https://github.com/ayakamaster999/APLICACION-WEB-INVENTARIODOKER-MAIN/actions/workflows/docker-compose.yml/badge.svg)](https://github.com/ayakamaster999/APLICACION-WEB-INVENTARIODOKER-MAIN/actions) 
-[![codecov](https://codecov.io/gh/ayakamaster999/APLICACION-WEB-INVENTARIODOKER-MAIN/branch/main/graph/badge.svg)](https://codecov.io/gh/ayakamaster999/APLICACION-WEB-INVENTARIODOKER-MAIN)
-
-# Aplicacion web de Inventario
+﻿# Aplicacion web de Inventario
 
 |                      Titulo                     |                                                             Contenido                                                                                  |
 |-------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
