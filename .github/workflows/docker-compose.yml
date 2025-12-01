@@ -32,9 +32,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: |
-            "aplicacion web- inventario/backend/package-lock.json"
-            "aplicacion web- inventario/frontend/package-lock.json"
+          cache-dependency-path: 'aplicacion web- inventario/backend/package-lock.json'
 
       - name: Install & run tests/build (backend/frontend if present)
         shell: bash
