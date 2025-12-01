@@ -127,7 +127,7 @@ docker compose -f $COMPOSE_FILE down
 - Si algún test o build falla en CI, el workflow sigue adelante (no-bloqueante), permitiendo inspeccionar los logs en GitHub Actions.
 - Para hacer tests/build obligatorios (romper el workflow si fallan), contáctate con el equipo de DevOps.
  
-6. Contribuciones y Contacto
+6. Contribuciones y Contactos
 ## 🤝 Contribuciones
 Las contribuciones son bienvenidas. Por favor, abre un 'issue' o envía un 'pull request' para sugerir mejoras o reportar errores.
 ## ✉️ Contacto
