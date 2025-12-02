@@ -181,7 +181,7 @@ Esto generará:
 - **Status Checks**: Si la cobertura cae por debajo del umbral, Codecov marcará el check como ⚠️ (advertencia no-bloqueante)
 
  
-6. Contribuciones y Contactos
+6. Contribuciones y Contacto
 ## 🤝 Contribuciones
 Las contribuciones son bienvenidas. Por favor, abre un 'issue' o envía un 'pull request' para sugerir mejoras o reportar errores.
 ## ✉️ Contacto
